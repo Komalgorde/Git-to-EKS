@@ -2,16 +2,16 @@ pipeline {
     agent any
     environment {
         AWS_REGION = 'us-east-1'
-        ECR_URI = '680464296394.dkr.ecr.us-east-1.amazonaws.com/jenkins-fargate'
+        ECR_URI = '680464296394.dkr.ecr.us-east-1.amazonaws.com/jenkins-ecr'
         IMAGE_TAG = "${BUILD_NUMBER}"
-        ECS_CLUSTER     = 'jenkins-fargate-cluster'
-        ECS_SERVICE     = 'jenkins-fargate-service'
-        ECS_TASK_FAMILY = 'jenkins-fargate-task'
+        EKS_CLUSTER     = 'eks-devops-lab'
+        EKS_DEPLOYMENT     = 'myapp-deployment'
+        ECS_CONTAINER     = 'myapp'
     }
     stages {
         stage('checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Komalgorde/Git-to-ECS.git'
+                git branch: 'main', url: 'https://github.com/Komalgorde/Git-to-EKS.git'
             }
         }
         //stage('Install Dependencies') {
@@ -65,45 +65,19 @@ pipeline {
                 '''
             }
         }
-        stage('Create New Task Definition') {
-    steps {
-        sh '''
-            aws ecs describe-task-definition \
-                --task-definition "$ECS_TASK_FAMILY" \
-                --region "$AWS_REGION" \
-                --query 'taskDefinition' \
-                --output json > task-definition.json
-
-            jq --arg IMAGE "$ECR_URI:$IMAGE_TAG" \
-                '.containerDefinitions[0].image = $IMAGE |
-                 del(.taskDefinitionArn,
-                     .revision,
-                     .status,
-                     .requiresAttributes,
-                     .compatibilities,
-                     .registeredAt,
-                     .registeredBy)' \
-                task-definition.json > new-task-definition.json
-
-            aws ecs register-task-definition \
-                --cli-input-json file://new-task-definition.json \
-                --region "$AWS_REGION"
-        '''
-            }
-        }
-        stage('Deploy to ECS') {
+        
+        stage('Deploy to EKS') {
             steps {
-                 sh ''' aws ecs update-service \
-                    --cluster $ECS_CLUSTER \
-                    --service $ECS_SERVICE \
-                    --task-definition $ECS_TASK_FAMILY \
+                 sh """
+                    aws eks update-kubeconfig \
+                    --name $EKS_CLUSTER \ 
                     --region $AWS_REGION
 
-                aws ecs wait services-stable \
-                    --cluster $ECS_CLUSTER \
-                    --services $ECS_SERVICE \
-                    --region $AWS_REGION
-                '''
+                    kubectl set image deployment/$K8S_DEPLOYMENT \
+                    $K8S_CONTAINER=$ECR_URI:$IMAGE_TAG
+                    
+                    kubectl rollout status deployment/$K8S_DEPLOYMENT
+                """
             }
         }
     }
