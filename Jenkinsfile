@@ -6,7 +6,7 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
         EKS_CLUSTER     = 'eks-devops-lab'
         EKS_DEPLOYMENT     = 'myapp-deployment'
-        ECS_CONTAINER     = 'myapp'
+        EKS_CONTAINER     = 'myapp'
     }
     stages {
         stage('checkout') {
