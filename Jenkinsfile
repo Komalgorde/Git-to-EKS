@@ -69,13 +69,8 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                  sh """
-                    aws eks update-kubeconfig \
-                    --name $EKS_CLUSTER \ 
-                    --region $AWS_REGION
-
-                    kubectl set image deployment/$K8S_DEPLOYMENT \
-                    $K8S_CONTAINER=$ECR_URI:$IMAGE_TAG
-                    
+                    aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
+                    kubectl set image deployment/$K8S_DEPLOYMENT $K8S_CONTAINER=$ECR_URI:$IMAGE_TAG
                     kubectl rollout status deployment/$K8S_DEPLOYMENT
                 """
             }
