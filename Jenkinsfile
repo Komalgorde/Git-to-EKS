@@ -70,8 +70,8 @@ pipeline {
             steps {
                  sh """
                     aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
-                    kubectl set image deployment/$K8S_DEPLOYMENT $K8S_CONTAINER=$ECR_URI:$IMAGE_TAG
-                    kubectl rollout status deployment/$K8S_DEPLOYMENT
+                    kubectl set image deployment/$EKS_DEPLOYMENT $EKS_CONTAINER=$ECR_URI:$IMAGE_TAG
+                    kubectl rollout status deployment/$EKS_DEPLOYMENT
                 """
             }
         }
